@@ -8,28 +8,34 @@ using static RCVConverter.TycoCorrections;
 
 Console.WriteLine("Starting Conversion!");
 
-if (File.Exists("settings.txt"))
+while (true)
 {
-    foreach (var setting in File.ReadAllLines("settings.txt"))
+    if (File.Exists("settings.txt"))
     {
-        switch (setting.ToLower())
+        foreach (var setting in File.ReadAllLines("settings.txt"))
         {
-            case "election type (use national when district data is given): national":
-                Settings.electionType = ElectionType.National;
-                break;
-            case "correct rank numbers (use false if you are not tyco): false":
-                Settings.correctRankNumbers = false;
-                break;
+            switch (setting.ToLower())
+            {
+                case "election type (use national when district data is given): national":
+                    Settings.electionType = ElectionType.National;
+                    break;
+                case "correct rank numbers (use false if you are not tyco): false":
+                    Settings.correctRankNumbers = false;
+                    break;
+            }
         }
+        break;
+    }
+    else
+    {
+        FileCreate("settings.txt",
+    @"Election Type (use national when district data is given): Standard
+Correct Rank Numbers (use false if you are not Tyco): True");
+
+        Console.WriteLine("Settings file has been generated. Press any key to carry on with the settings in settings.txt.");
+        Console.ReadKey();
     }
 }
-else
-{
-    FileCreate("settings.txt",
-@"Election Type (use national when district data is given): Standard
-Correct Rank Numbers (use false if you are not Tyco): True");
-}
-
 
 
 List<string> candidates = File.ReadAllLines("candidates.txt").ToList();
