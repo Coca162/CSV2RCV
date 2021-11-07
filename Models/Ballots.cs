@@ -4,7 +4,7 @@
     {
         public Districts District { get; set; }
 
-        public NationalBallot(Dictionary<Candidates, int> voting, Districts district) : base(voting)
+        public NationalBallot(Dictionary<string, int> voting, Districts district) : base(voting)
         {
             District = district;
         }
@@ -12,9 +12,9 @@
 
     public class Ballot
     {
-        public Dictionary<Candidates, int> Voting { get; set; }
+        public Dictionary<string, int> Voting { get; set; }
 
-        public Ballot(Dictionary<Candidates, int> voting)
+        public Ballot(Dictionary<string, int> voting)
         {
             Voting = voting;
         }

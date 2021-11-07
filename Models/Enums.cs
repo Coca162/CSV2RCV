@@ -3,7 +3,7 @@
     public enum Districts
     {
         Avalon,
-        Icelesia,
+        Voopmont,
         Kogi,
         Katonia,
         Lanatia,
@@ -13,9 +13,10 @@
         New_Avalon,
         New_Spudland,
         New_Vooperis,
-        Noastella,
+        Novastella,
         Old_King,
         San_Vooperisco,
-        Thesonica
+        Thesonica,
+        Offworld
     }
 }

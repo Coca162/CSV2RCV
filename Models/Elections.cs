@@ -6,7 +6,7 @@
 
         public new NationalBallot Ballot { get; set; }
 
-        public NationalElection(NationalBallot ballot, string name) : base(ballot)
+        public NationalElection(NationalBallot ballot, List<string> candidates, string name) : base(ballot, candidates)
         {
             Name = name;
             Ballot = ballot;
@@ -17,7 +17,7 @@
     {
         public Districts District { get; set; }
 
-        public DistrictElection(Ballot ballot, Districts district) : base(ballot)
+        public DistrictElection(Ballot ballot, List<string> candidates, Districts district) : base(ballot, candidates)
         {
             District = district;
         }
@@ -29,10 +29,10 @@
 
         public Ballot Ballot { get; set; }
 
-        public Election(Ballot ballot)
+        public Election(Ballot ballot, List<string> candidates)
         {
             Ballot = ballot;
-            Candidates = ((Candidates[])Enum.GetValues(typeof(Candidates))).Select(c => c.ToString()).ToList();
+            Candidates = candidates;
         }
     }
 }
