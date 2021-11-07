@@ -102,7 +102,7 @@ static Districts StringToDistrict(string input)
         "voopmont" or "icelesia" => Districts.Voopmont,
         "kogi" or "corgi" => Districts.Kogi,
         "lanatia" or "medievala" => Districts.Lanatia,
-        "katonia" or "elysian katonia" or "server past" or "servers past" => Districts.Katonia,
+        "katonia" or "elysian katonia" or "katonian elysium" or "server past" or "servers past" => Districts.Katonia,
         "landing cove" => Districts.Landing_Cove,
         "los vooperis" => Districts.Los_Vooperis,
         "netherlands" or "ardenti terra" => Districts.Netherlands,
