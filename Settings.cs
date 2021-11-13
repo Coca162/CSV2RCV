@@ -1,9 +1,12 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
+using System.Text.Encodings.Web;
+using System.Text.Json;
 using System.Threading.Tasks;
 using RCVConverter.Models;
+using static RCVConverter.Files;
 
 namespace RCVConverter
 {
@@ -63,11 +66,56 @@ namespace RCVConverter
             }
             return districts;
         }
+
+        public static async Task SetUpSettings()
+        {
+            while (!File.Exists("settings.txt"))
+            {
+                FileCreate("settings.txt",
+@"Election Type (use National when district data is given): Standard
+Correct Rank Numbers (use False if you are not Tyco): True");
+
+                Console.WriteLine("Settings file has been generated. Press any key to carry on with the settings in settings.txt.");
+                Console.ReadKey();
+            }
+
+            foreach (var setting in File.ReadAllLines("settings.txt"))
+            {
+                switch (setting.ToLowerInvariant().Split(":0")[2])
+                {
+                    case "national":
+                        electionType = ElectionType.National;
+                        break;
+                    case "false":
+                        correctRankNumbers = false;
+                        break;
+                }
+            }
+
+            while (!File.Exists("districtnames.json"))
+            {
+                var file = JsonSerializer.Serialize(DistrictNames, options: new JsonSerializerOptions
+                { WriteIndented = true, Encoder = JavaScriptEncoder.UnsafeRelaxedJsonEscaping });
+                FileCreate("districtnames.json", file);
+
+                Console.WriteLine("District Name file has been generated. Press any key to carry on with the district names in districtnames.json.");
+                Console.ReadKey();
+            }
+
+            var stream = File.OpenRead("districtnames.json");
+            DistrictNames = await JsonSerializer.DeserializeAsync<Dictionary<string, List<string>>>(stream);
+        }
     }
 
     public enum ElectionType
     {
         National,
         Standard
+    }
+
+    public enum OutputType
+    {
+        Calculated,
+        Raw
     }
 }
