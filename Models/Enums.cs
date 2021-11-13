@@ -3,13 +3,12 @@
     public enum Districts
     {
         Avalon,
-        Voopmont,
         Kogi,
         Katonia,
         Lanatia,
         Landing_Cove,
         Los_Vooperis,
-        Netherlands,
+        Ardenti_Terra,
         New_Avalon,
         New_Spudland,
         New_Vooperis,
@@ -17,6 +16,7 @@
         Old_King,
         San_Vooperisco,
         Thesonica,
+        Voopmont,
         Offworld
     }
 }

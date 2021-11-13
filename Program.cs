@@ -3,51 +3,62 @@ using System.Text;
 using System.Text.RegularExpressions;
 using System.Linq;
 using System;
+using System.Text.Json;
 using RCVConverter;
+using static RCVConverter.Settings;
 using static RCVConverter.TycoCorrections;
+using System.Text.Unicode;
+using System.Text.Encodings.Web;
 
 Console.WriteLine("Starting Conversion!");
 
-while (true)
+while (!File.Exists("settings.txt"))
 {
-    if (File.Exists("settings.txt"))
-    {
-        foreach (var setting in File.ReadAllLines("settings.txt"))
-        {
-            switch (setting.ToLower())
-            {
-                case "election type (use national when district data is given): national":
-                    Settings.electionType = ElectionType.National;
-                    break;
-                case "correct rank numbers (use false if you are not tyco): false":
-                    Settings.correctRankNumbers = false;
-                    break;
-            }
-        }
-        break;
-    }
-    else
-    {
-        FileCreate("settings.txt",
-    @"Election Type (use national when district data is given): Standard
+    FileCreate("settings.txt",
+@"Election Type (use national when district data is given): Standard
 Correct Rank Numbers (use false if you are not Tyco): True");
 
-        Console.WriteLine("Settings file has been generated. Press any key to carry on with the settings in settings.txt.");
-        Console.ReadKey();
+    Console.WriteLine("Settings file has been generated. Press any key to carry on with the settings in settings.txt.");
+    Console.ReadKey();
+}
+
+foreach (var setting in File.ReadAllLines("settings.txt"))
+{
+    switch (setting.ToLower())
+    {
+        case "election type (use national when district data is given): national":
+            electionType = ElectionType.National;
+            break;
+        case "correct rank numbers (use false if you are not tyco): false":
+            correctRankNumbers = false;
+            break;
     }
 }
 
+while (!File.Exists("districtnames.json"))
+{
+    var file = JsonSerializer.Serialize(DistrictNames, options: new JsonSerializerOptions 
+    { WriteIndented = true, Encoder = JavaScriptEncoder.UnsafeRelaxedJsonEscaping });
+    FileCreate("districtnames.json", file);
+
+    Console.WriteLine("District Name file has been generated. Press any key to carry on with the district names in districtnames.json.");
+    Console.ReadKey();
+}
+
+var stream = File.OpenRead("districtnames.json");
+DistrictNames = await JsonSerializer.DeserializeAsync<Dictionary<string, List<string>>>(stream);
+Dictionary<Districts, List<string>> districts = SettingToDistricts(DistrictNames);
 
 List<string> candidates = File.ReadAllLines("candidates.txt").ToList();
-if (Settings.electionType == ElectionType.Standard)
+if (electionType == ElectionType.Standard)
 {
     List<Ballot> ballots = ImportBallots(candidates);
 
     CreateRCVFile(ballots.Select(x => x.Voting), candidates.Count, "output.txt");
 }
-else if (Settings.electionType == ElectionType.National)
+else if (electionType == ElectionType.National)
 {
-    List<NationalBallot> ballots = ImportNationalBallots(candidates);
+    List<NationalBallot> ballots = ImportNationalBallots(candidates, districts);
 
     CreateRCVFile(ballots.Select(x => x.Voting), candidates.Count, "output.txt");
 
@@ -60,7 +71,7 @@ else if (Settings.electionType == ElectionType.National)
     }
 }
 
-static List<NationalBallot> ImportNationalBallots(List<string> candidates)
+static List<NationalBallot> ImportNationalBallots(List<string> candidates, Dictionary<Districts, List<string>> districtNames)
 {
     List<NationalBallot> ballots = new();
 
@@ -74,7 +85,7 @@ static List<NationalBallot> ImportNationalBallots(List<string> candidates)
         {
             if (first)
             {
-                district = StringToDistrict(field);
+                district = districtNames.Where(x => x.Value.Contains(field.ToLowerInvariant())).Single().Key;
                 first = false;
                 continue;
             }
@@ -91,31 +102,7 @@ static List<NationalBallot> ImportNationalBallots(List<string> candidates)
         ballots.Add(new NationalBallot(votes, (Districts)district));
     }
 
-    return Settings.correctRankNumbers ? CorrectNonConsecutiveBallotNumbers(ballots) : ballots;
-}
-
-static Districts StringToDistrict(string input)
-{
-    return input.ToLowerInvariant() switch
-    {
-        "avalon" or "old yam" => Districts.Avalon,
-        "voopmont" or "icelesia" => Districts.Voopmont,
-        "kogi" or "corgi" => Districts.Kogi,
-        "lanatia" or "medievala" => Districts.Lanatia,
-        "katonia" or "elysian katonia" or "katonian elysium" or "server past" or "servers past" => Districts.Katonia,
-        "landing cove" => Districts.Landing_Cove,
-        "los vooperis" => Districts.Los_Vooperis,
-        "netherlands" or "ardenti terra" => Districts.Netherlands,
-        "new yam" or "new avalon" => Districts.New_Avalon,
-        "new spudland" or "spudland" => Districts.New_Spudland,
-        "new vooperis" => Districts.New_Vooperis,
-        "vooperia city" or "novastella" => Districts.Novastella,
-        "old king" or "old king peninsula" => Districts.Old_King,
-        "san vooperisco" => Districts.San_Vooperisco,
-        "thesonica" or "queensland" => Districts.Thesonica,
-        "offworld" => Districts.Offworld,
-        _ => throw new Exception("District is not a district!"),
-    };
+    return correctRankNumbers ? CorrectNonConsecutiveBallotNumbers(ballots) : ballots;
 }
 
 static List<Ballot> ImportBallots(List<string> candidates)
@@ -141,7 +128,7 @@ static List<Ballot> ImportBallots(List<string> candidates)
         ballots.Add(new Ballot(votes));
     }
 
-    return Settings.correctRankNumbers ? CorrectNonConsecutiveBallotNumbers(ballots) : ballots;
+    return correctRankNumbers ? CorrectNonConsecutiveBallotNumbers(ballots) : ballots;
 }
 
 static void CreateRCVFile(IEnumerable<Dictionary<string, int>> ballots, int candidateCount, string filePath)
@@ -173,4 +160,3 @@ static void FileCreate(string path, string content)
     byte[] info = new UTF8Encoding(true).GetBytes(string.Join(Environment.NewLine, content));
     fs.Write(info, 0, info.Length);
 }
-
