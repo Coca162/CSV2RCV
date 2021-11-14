@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -13,6 +13,9 @@ namespace RCVConverter
     public static class Settings
     {
         public static ElectionType electionType = ElectionType.Standard;
+        public static bool singleFile = true;
+        public static OutputType outputType = OutputType.Calculated;
+        public static bool acceptIncomplete = true;
         public static bool correctRankNumbers = true;
 
         public static Dictionary<string, List<string>> DistrictNames = new()
@@ -73,24 +76,36 @@ namespace RCVConverter
             {
                 FileCreate("settings.txt",
 @"Election Type (use National when district data is given): Standard
+Single File For National Elections: True
+Output Type (Raw if you want to use https://petertheone.github.io/IRV/): Calculated
+Accept incomplete or partial ballots: True
 Correct Rank Numbers (use False if you are not Tyco): True");
 
                 Console.WriteLine("Settings file has been generated. Press any key to carry on with the settings in settings.txt.");
                 Console.ReadKey();
             }
 
+            int i = 0;
             foreach (var setting in File.ReadAllLines("settings.txt"))
             {
-                switch (setting.ToLowerInvariant().Split(":0")[2])
+                switch (setting.ToLowerInvariant().Split(": ")[1])
                 {
                     case "national":
                         electionType = ElectionType.National;
                         break;
+                    case "raw":
+                        outputType = OutputType.Raw;
+                        break;
                     case "false":
-                        correctRankNumbers = false;
+                        if (i == 1) singleFile = false;
+                        if (i == 3) acceptIncomplete = false;
+                        else if (i == 4) correctRankNumbers = false;
                         break;
                 }
+                i++;
             }
+
+            if (electionType == ElectionType.Standard) return;
 
             while (!File.Exists("districtnames.json"))
             {
