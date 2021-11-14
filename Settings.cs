@@ -76,7 +76,7 @@ namespace RCVConverter
             {
                 FileCreate("settings.txt",
 @"Election Type (use National when district data is given): Standard
-Single File For National Elections: True
+Single File For Calculated National Elections: True
 Output Type (Raw if you want to use https://petertheone.github.io/IRV/): Calculated
 Accept incomplete or partial ballots: True
 Correct Rank Numbers (use False if you are not Tyco): True");
