@@ -1,4 +1,4 @@
-﻿using RCVConverter.Models;
+using RCVConverter.Models;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -39,15 +39,16 @@ namespace RCVConverter
                     i++;
                 }
 
+                if (correctRankNumbers) votes = CorrectSingleBallotNumbers(votes);
                 ballots.Add(new NationalBallot(votes, (Districts)district));
             }
 
-            return correctRankNumbers ? CorrectNonConsecutiveBallotNumbers(ballots) : ballots;
+            return ballots;
         }
 
-        public static List<Ballot> ImportBallots(List<string> candidates)
+        public static List<Dictionary<string, int>> ImportBallots(List<string> candidates)
         {
-            List<Ballot> ballots = new();
+            List<Dictionary<string, int>> ballots = new();
 
             foreach (var row in File.ReadAllLines("input.csv"))
             {
@@ -65,14 +66,15 @@ namespace RCVConverter
                     i++;
                 }
 
-                ballots.Add(new Ballot(votes));
+                if (correctRankNumbers) votes = CorrectSingleBallotNumbers(votes);
+                ballots.Add(votes);
             }
 
-            return correctRankNumbers ? CorrectNonConsecutiveBallotNumbers(ballots) : ballots;
+            return ballots;
         }
 
         //Tyco Corrections
-        public static List<NationalBallot> CorrectNonConsecutiveBallotNumbers(List<NationalBallot> ballots)
+        public static List<NationalBallot> CorrectNonConsecutiveBallotNumbers(IEnumerable<NationalBallot> ballots)
         {
             List<NationalBallot> newBallots = new();
 
@@ -97,29 +99,36 @@ namespace RCVConverter
             return newBallots;
         }
 
-        public static List<Ballot> CorrectNonConsecutiveBallotNumbers(List<Ballot> ballots)
+        public static List<Dictionary<string, int>> CorrectNonConsecutiveBallotNumbers(IEnumerable<Dictionary<string, int>> ballots)
         {
-            List<Ballot> newBallots = new();
+            List<Dictionary<string, int>> newBallots = new();
 
             foreach (var ballot in ballots)
             {
-                var voting = ballot.Voting.Where(y => y.Value != 0).OrderBy(y => y.Value).ToList();
-                Dictionary<string, int> votes = new();
-                foreach (var vote in ballot.Voting)
-                {
-                    if (vote.Value != 0)
-                    {
-                        votes.Add(vote.Key, voting.IndexOf(vote) + 1);
-                    }
-                    else
-                    {
-                        votes.Add(vote.Key, 0);
-                    }
-                }
-                newBallots.Add(new(votes));
+                Dictionary<string, int> votes = CorrectSingleBallotNumbers(ballot);
+                newBallots.Add(votes);
             }
 
             return newBallots;
+        }
+
+        private static Dictionary<string, int> CorrectSingleBallotNumbers(Dictionary<string, int> ballot)
+        {
+            var voting = ballot.Where(y => y.Value != 0).OrderBy(y => y.Value).ToList();
+            Dictionary<string, int> votes = new();
+            foreach (var vote in ballot)
+            {
+                if (vote.Value != 0)
+                {
+                    votes.Add(vote.Key, voting.IndexOf(vote) + 1);
+                }
+                else
+                {
+                    votes.Add(vote.Key, 0);
+                }
+            }
+
+            return votes;
         }
     }
 }

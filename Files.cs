@@ -37,6 +37,5 @@ namespace RCVConverter
             byte[] info = new UTF8Encoding(true).GetBytes(string.Join(Environment.NewLine, content));
             fs.Write(info, 0, info.Length);
         }
-
     }
 }
